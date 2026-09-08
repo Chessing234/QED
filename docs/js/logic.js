@@ -831,7 +831,9 @@ function hasBoundOrUnknownFree(term,env) {
     }
 }
 
-// true when `boundTerm` (a quantifier's bound-variable term) shadows `search`
+// true when `boundTerm` (a quantifier's bound-variable term) shadows `search`.
+// Compare both the term name and the wrapped variable so free-variable terms
+// and bound-variable terms with the same printed name count as a capture.
 function termCapturesSearch(boundTerm, search) {
     if (!boundTerm || !search) return false;
     if (boundTerm.name == search.name) return true;
@@ -879,10 +881,6 @@ function searchReplace(statement, search, replace) {
             return;
         case "connective":
             return connectiveSentence(statement.connective, newArgList);
-        case "quantifier":
-            if (statement.subtype == "for all") return forAll( newArgList[0], newArgList[1]);
-            if (statement.subtype == "there exists") return thereExists( newArgList[0], newArgList[1]);
-            return;
     }
 }
 
@@ -1296,20 +1294,6 @@ function allSearchReplace(statement, search, replace)
                     break;
         }
         break;
-        case "quantifier":
-            switch(statement.subtype) {
-                case "for all":
-                    for (i=0; i < newArgList[0].length; i++)
-                        for (j=0; j < newArgList[1].length; j++)
-                            list.push( forAll( newArgList[0][i], newArgList[1][j]));
-                    break;
-                case "there exists":
-                    for (i=0; i < newArgList[0].length; i++)
-                        for (j=0; j < newArgList[1].length; j++)
-                            list.push( thereExists( newArgList[0][i], newArgList[1][j]));
-                    break;
-            }
-            break;
     }
     return list;
 }
@@ -1546,6 +1530,7 @@ function subs(template, output)
         return sentenceContext(subsSentence(template.sentence, output), subsEnvironment(template.environment, output));
     }
     if (template.type == "term context") {
+        // laws with a term-context conclusion (instantiation, renaming) land here
         return termContext(subsSentence(template.term, output));
     }
     error("Template type not recognised:" + template.type);
