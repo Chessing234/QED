@@ -854,6 +854,7 @@ function searchReplace(statement, search, replace) {
     if (statement.type == "free variable" || statement.type == "bound variable") return statement;
 
     if (statement.type == "quantifier") {
+        // never rewrite the binder; skip the body when search is that bound variable
         var bound = statement.argList[1];
         var body = statement.argList[0];
         var newBody = termCapturesSearch(bound, search) ? body : searchReplace(body, search, replace);
