@@ -1464,6 +1464,7 @@ function subsSentence(template, output)
                 return output[template.name];
             }
             if (template.subtype == "predicate") {
+                // Equality still goes through equals() so the special-cased object stays unique.
                 var predArgs = [];
                 var k;
                 for (k = 0; k < template.argList.length; k++)
