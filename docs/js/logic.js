@@ -831,6 +831,17 @@ function hasBoundOrUnknownFree(term,env) {
     }
 }
 
+// true when `boundTerm` (a quantifier's bound-variable term) shadows `search`
+function termCapturesSearch(boundTerm, search) {
+    if (!boundTerm || !search) return false;
+    if (boundTerm.name == search.name) return true;
+    if (boundTerm.argList && boundTerm.argList[0] && boundTerm.argList[0].name == search.name) return true;
+    if (search.argList && search.argList[0] && boundTerm.name == search.argList[0].name) return true;
+    if (boundTerm.argList && boundTerm.argList[0] && search.argList && search.argList[0]
+        && boundTerm.argList[0].name == search.argList[0].name) return true;
+    return false;
+}
+
 // replace all occurrences of term "search" with term "replace"
 
 function searchReplace(statement, search, replace) {
@@ -839,6 +850,15 @@ function searchReplace(statement, search, replace) {
 
 
     if (statement.type == "free variable" || statement.type == "bound variable") return statement;
+
+    if (statement.type == "quantifier") {
+        var bound = statement.argList[1];
+        var body = statement.argList[0];
+        var newBody = termCapturesSearch(bound, search) ? body : searchReplace(body, search, replace);
+        if (statement.subtype == "for all") return forAll(newBody, bound);
+        if (statement.subtype == "there exists") return thereExists(newBody, bound);
+        return;
+    }
 
     if (statement.name == search.name) return toTerm(replace);
 
@@ -1510,6 +1530,9 @@ function subs(template, output)
     }
     if (template.type == "sentence in environment") {
         return sentenceContext(subsSentence(template.sentence, output), subsEnvironment(template.environment, output));
+    }
+    if (template.type == "term context") {
+        return termContext(subsSentence(template.term, output));
     }
     error("Template type not recognised:" + template.type);
 }
