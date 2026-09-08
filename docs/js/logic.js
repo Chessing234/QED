@@ -1365,10 +1365,11 @@ function matchWithGivenSentence( sentence, template, output) {
                             matchWithGivenSentence( sentence.argList[i], template.argList[i], output);
                         return;
                     }
-                    if (sentence.subtype != "predicate") {
+                    if (sentence.subtype != "predicate" || !sentence.predicate) {
                         output.matches = false;
                         return;
                     }
+                    // Same pattern as equality: the predicate object must be the same, then match args.
                     if (sentence.predicate != template.predicate) {
                         output.matches = false;
                         return;
