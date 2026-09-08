@@ -1208,6 +1208,20 @@ function allSearchReplace(statement, search, replace)
 {
     if (statement.type == "free variable" || statement.type == "bound variable") return [statement];
 
+    if (statement.type == "quantifier") {
+        var bound = statement.argList[1];
+        var bodies = termCapturesSearch(bound, search)
+            ? [statement.argList[0]]
+            : allSearchReplace(statement.argList[0], search, replace);
+        var listQ = [];
+        var iq;
+        for (iq = 0; iq < bodies.length; iq++) {
+            if (statement.subtype == "for all") listQ.push(forAll(bodies[iq], bound));
+            if (statement.subtype == "there exists") listQ.push(thereExists(bodies[iq], bound));
+        }
+        return listQ;
+    }
+
     var list = [];
     var newArgList = [];
     var i,j;
