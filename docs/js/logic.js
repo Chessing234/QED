@@ -1365,8 +1365,24 @@ function matchWithGivenSentence( sentence, template, output) {
                             matchWithGivenSentence( sentence.argList[i], template.argList[i], output);
                         return;
                     }
-                    // need some code for matching with a predicate sentence not involving equality.  Right now, we simply refuse to match:
-                    output.matches=false;
+                    if (sentence.subtype != "predicate") {
+                        output.matches = false;
+                        return;
+                    }
+                    if (sentence.predicate != template.predicate) {
+                        output.matches = false;
+                        return;
+                    }
+                    if (sentence.argList.length != template.argList.length) {
+                        output.matches = false;
+                        return;
+                    }
+                    var j;
+                    for (j = 0; j < template.argList.length; j++)
+                        matchWithGivenSentence(sentence.argList[j], template.argList[j], output);
+                    return;
+                default:
+                    output.matches = false;
                     return;
             }
         case "connective":
@@ -1447,14 +1463,13 @@ function subsSentence(template, output)
                 return output[template.name];
             }
             if (template.subtype == "predicate") {
-                if (template.predicate == equality) { // this is the one operator for which we do implement matching
-                    return equals( subsSentence(template.argList[0] , output), subsSentence(template.argList[1] , output))
-                }
-                else {
-                    // need (rather complicated) code here.  For now, just fail to match.
-                    output.matches = false;
-                    return new Sentence();
-                }
+                var predArgs = [];
+                var k;
+                for (k = 0; k < template.argList.length; k++)
+                    predArgs[k] = subsSentence(template.argList[k], output);
+                if (template.predicate == equality)
+                    return equals(predArgs[0], predArgs[1]);
+                return predicateSentence(template.predicate, predArgs);
             }
             break;
         case "quantifier":
