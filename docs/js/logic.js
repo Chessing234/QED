@@ -1383,6 +1383,7 @@ function matchWithGivenSentence( sentence, template, output) {
                         matchWithGivenSentence(sentence.argList[j], template.argList[j], output);
                     return;
                 default:
+                    // Unknown primitive subtype used to fall through into connective matching.
                     output.matches = false;
                     return;
             }
